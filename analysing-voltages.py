@@ -68,8 +68,41 @@ fig = px.scatter(
     y=y_axis_var,
     color="machine_number",
     hover_data=["control_number", "test_step", "S_VSENSE", "S_OVP"],
-    title=f"{y_axis_var} over Time for {product}"
+    title=f"{y_axis_var} over Time for {product} by Machine Number",
+    color_discrete_sequence=px.colors.qualitative.Plotly
 )
+
+fig.update_traces(marker=dict(size=10))
+
+# Display the plot
+st.plotly_chart(fig)
+
+fig = px.scatter(
+    filtered_df,
+    x="timestamp",
+    y=y_axis_var,
+    color="control_number",
+    hover_data=["machine_number", "test_step", "S_VSENSE", "S_OVP"],
+    title=f"{y_axis_var} over Time for {product} by Control Number",
+    color_discrete_sequence=px.colors.qualitative.Plotly
+)
+
+fig.update_traces(marker=dict(size=10))
+
+# Display the plot
+st.plotly_chart(fig)
+
+fig = px.scatter(
+    filtered_df,
+    x="timestamp",
+    y=y_axis_var,
+    color="test_step",
+    hover_data=["machine_number", "control_number", "S_VSENSE", "S_OVP"],
+    title=f"{y_axis_var} over Time for {product} by Test Step",
+    color_discrete_sequence=px.colors.qualitative.Plotly
+)
+
+fig.update_traces(marker=dict(size=10))
 
 # Display the plot
 st.plotly_chart(fig)

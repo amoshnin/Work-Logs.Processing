@@ -5,10 +5,14 @@ import plotly.graph_objects as go
 from pathlib import Path
 import re
 
-def load_data(folder_path):
+def load_data(folder_path, progress_bar):
     """Load all CSV files from the specified folder and combine them into a structured dataset."""
     all_files = list(Path(folder_path).glob('*.csv'))
     data_dict = {}
+
+    # Calculate progress increment per file
+    progress_increment = 1.0 / len(all_files)
+    current_progress = 0.0
 
     for file_path in all_files:
         # Parse filename components
@@ -30,14 +34,22 @@ def load_data(folder_path):
         # Store in dictionary
         data_dict[filename] = df
 
+        # Update progress bar
+        current_progress += progress_increment
+        progress_bar.progress(current_progress)
+
     # Combine all dataframes
     combined_df = pd.concat(data_dict.values(), ignore_index=True)
     return combined_df
 
-def restructure_data(df):
+def restructure_data(df, progress_bar):
     """Restructure the data for easier plotting by converting wide format to long format."""
+    progress_bar.progress(0.3)
+
     # Identify measurement columns
     measure_cols = [col for col in df.columns if any(x in col for x in ['COOLDUTY', 'ES0_TEMP', 'HTR_DUTY', 'SNK_TEMP'])]
+
+    progress_bar.progress(0.6)
 
     # Melt the dataframe
     melted = pd.melt(
@@ -48,8 +60,12 @@ def restructure_data(df):
         value_name='value'
     )
 
+    progress_bar.progress(0.8)
+
     # Extract socket number and measurement type
     melted[['measurement_type', 'socket']] = melted['measurement'].str.extract(r'(\w+)\.(\d+)')
+
+    progress_bar.progress(1.0)
 
     return melted
 
@@ -182,9 +198,21 @@ def main():
 
     if folder_path:
         try:
-            # Load and process data
-            df = load_data(folder_path)
-            processed_df = restructure_data(df)
+            loading_message = st.empty()
+            progress_bar = st.progress(0)
+
+            with st.spinner('Loading and processing data...'):
+                # Load data with progress tracking
+                loading_message.text("Loading data files...")
+                df = load_data(folder_path, progress_bar)
+
+                # Process data with progress tracking
+                loading_message.text("Restructuring data...")
+                processed_df = restructure_data(df, progress_bar)
+
+                # Clear loading indicators
+                loading_message.empty()
+                progress_bar.empty()
 
             # Filters
             zones = sorted(processed_df['zone'].unique())

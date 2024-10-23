@@ -18,6 +18,9 @@ def load_data(folder_path):
         # Read CSV file
         df = pd.read_csv(file_path)
 
+        # Convert time column to datetime
+        df['time'] = pd.to_datetime(df['time'], format='%m/%d/%y %H:%M:%S.%f')
+
         # Add metadata columns
         df['zone'] = zone
         df['slot'] = slot
@@ -39,7 +42,7 @@ def restructure_data(df):
     # Melt the dataframe
     melted = pd.melt(
         df,
-        id_vars=['timestamp', 'zone', 'slot', 'product'],
+        id_vars=['time', 'zone', 'slot', 'product'],
         value_vars=measure_cols,
         var_name='measurement',
         value_name='value'
@@ -65,7 +68,7 @@ def create_socket_subplot(df, measurement_type, selected_zone, selected_slot, se
         socket_data = filtered_df[filtered_df['socket'] == socket]
         fig.add_trace(
             go.Scatter(
-                x=socket_data['timestamp'],
+                x=socket_data['time'],
                 y=socket_data['value'],
                 name=f'Socket {socket}',
                 mode='lines+markers'
@@ -93,7 +96,7 @@ def create_correlation_plots(df, selected_zone, selected_slot, selected_product,
 
     # Pivot the data to get measurements as columns
     pivot_df = filtered_df.pivot(
-        index='timestamp',
+        index='time',
         columns='measurement_type',
         values='value'
     ).reset_index()
@@ -106,7 +109,9 @@ def create_correlation_plots(df, selected_zone, selected_slot, selected_product,
             x=pivot_df['ES0_TEMP'],
             y=pivot_df['COOLDUTY'],
             mode='markers',
-            name='COOLDUTY'
+            name='COOLDUTY',
+            customdata=pivot_df['time'],
+            hovertemplate='ES0_TEMP: %{x}<br>COOLDUTY: %{y}<br>Time: %{customdata|%Y-%m-%d %H:%M:%S}<extra></extra>'
         )
     )
 
@@ -115,7 +120,9 @@ def create_correlation_plots(df, selected_zone, selected_slot, selected_product,
             x=pivot_df['ES0_TEMP'],
             y=pivot_df['HTR_DUTY'],
             mode='markers',
-            name='HTR_DUTY'
+            name='HTR_DUTY',
+            customdata=pivot_df['time'],
+            hovertemplate='ES0_TEMP: %{x}<br>HTR_DUTY: %{y}<br>Time: %{customdata|%Y-%m-%d %H:%M:%S}<extra></extra>'
         )
     )
 
@@ -135,7 +142,9 @@ def create_correlation_plots(df, selected_zone, selected_slot, selected_product,
             x=pivot_df['SNK_TEMP'],
             y=pivot_df['COOLDUTY'],
             mode='markers',
-            name='COOLDUTY'
+            name='COOLDUTY',
+             customdata=pivot_df['time'],
+            hovertemplate='SNK_TEMP: %{x}<br>COOLDUTY: %{y}<br>Time: %{customdata|%Y-%m-%d %H:%M:%S}<extra></extra>'
         )
     )
 
@@ -144,7 +153,9 @@ def create_correlation_plots(df, selected_zone, selected_slot, selected_product,
             x=pivot_df['SNK_TEMP'],
             y=pivot_df['HTR_DUTY'],
             mode='markers',
-            name='HTR_DUTY'
+            name='HTR_DUTY',
+            customdata=pivot_df['time'],
+            hovertemplate='SNK_TEMP: %{x}<br>HTR_DUTY: %{y}<br>Time: %{customdata|%Y-%m-%d %H:%M:%S}<extra></extra>'
         )
     )
 
@@ -223,7 +234,7 @@ def main():
                     selected_zone,
                     selected_slot,
                     selected_product,
-                    selected_socket
+                    selected_socket,
                 )
 
                 # Display correlation plots

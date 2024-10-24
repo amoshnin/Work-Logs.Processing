@@ -1,9 +1,7 @@
-import plotly.express as px
 import os
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # --- Data Loading and Preprocessing ---
 @st.cache_data
@@ -55,15 +53,8 @@ filtered_df = df[
 # --- Main Visualization ---
 st.subheader("Voltage Measurements Analysis")
 
-# Create a figure with secondary y-axis
-fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-# Color mapping for different categories
-color_mapping = {
-    'machine': px.colors.qualitative.Set1,
-    'control': px.colors.qualitative.Set2,
-    'test': px.colors.qualitative.Set3
-}
+# Create figure
+fig = go.Figure()
 
 # Add color selection dropdown
 color_by = st.radio(
@@ -88,12 +79,14 @@ for category in filtered_df[color_by].unique():
             y=filtered_df[mask]['S_VSENSE'],
             name=f'{category} (VSENSE)',
             mode='markers',
-            marker=dict(size=8),
+            marker=dict(size=8, symbol='circle'),
             text=filtered_df[mask]['hover_text'],
-            hoverinfo='text+y',
+            hovertemplate=
+            '<b>VSENSE:</b> %{y:.3f}V<br>' +
+            '%{text}<br>' +
+            '<b>Time:</b> %{x}<extra></extra>',
             showlegend=True
-        ),
-        secondary_y=False
+        )
     )
 
 # Add traces for S_OVP
@@ -107,15 +100,19 @@ for category in filtered_df[color_by].unique():
             mode='markers',
             marker=dict(size=8, symbol='diamond'),
             text=filtered_df[mask]['hover_text'],
-            hoverinfo='text+y',
+            hovertemplate=
+            '<b>OVP:</b> %{y:.3f}V<br>' +
+            '%{text}<br>' +
+            '<b>Time:</b> %{x}<extra></extra>',
             showlegend=True
-        ),
-        secondary_y=True
+        )
     )
 
 # Update layout
 fig.update_layout(
     title=f"Voltage Measurements Over Time - {product}",
+    xaxis_title="Timestamp",
+    yaxis_title="Voltage (V)",
     hovermode='closest',
     height=600,
     legend=dict(
@@ -127,11 +124,6 @@ fig.update_layout(
     margin=dict(r=150)  # Add right margin for legend
 )
 
-# Update axes
-fig.update_xaxes(title_text="Timestamp")
-fig.update_yaxes(title_text="S_VSENSE (V)", secondary_y=False)
-fig.update_yaxes(title_text="S_OVP (V)", secondary_y=True)
-
 # Display the plot
 st.plotly_chart(fig, use_container_width=True)
 
@@ -142,11 +134,15 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.write("VSENSE Statistics")
-    st.write(filtered_df['S_VSENSE'].describe())
+    st.write(filtered_df['S_VSENSE'].describe().round(3))
 
 with col2:
     st.write("OVP Statistics")
-    st.write(filtered_df['S_OVP'].describe())
+    st.write(filtered_df['S_OVP'].describe().round(3))
+
+# Add correlation information
+correlation = filtered_df['S_VSENSE'].corr(filtered_df['S_OVP']).round(3)
+st.write(f"Correlation between VSENSE and OVP: {correlation}")
 
 # --- Data Table ---
 if st.checkbox("Show Raw Data"):

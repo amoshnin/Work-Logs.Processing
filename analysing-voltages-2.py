@@ -70,41 +70,42 @@ filtered_df['hover_text'] = (
     'Test Step: ' + filtered_df['test_step'].astype(str)
 )
 
-# Add traces for S_VSENSE
 for category in filtered_df[color_by].unique():
     mask = filtered_df[color_by] == category
+    category_df = filtered_df[mask]
+
+    # Add both VSENSE and OVP measurements in a single trace group
     fig.add_trace(
         go.Scatter(
-            x=filtered_df[mask]['timestamp'],
-            y=filtered_df[mask]['S_VSENSE'],
-            name=f'{category} (VSENSE)',
+            x=category_df['timestamp'],
+            y=category_df['S_VSENSE'],
+            name=f'{category}',
             mode='markers',
             marker=dict(size=8, symbol='circle'),
-            text=filtered_df[mask]['hover_text'],
+            text=category_df['hover_text'],
             hovertemplate=
             '<b>VSENSE:</b> %{y:.3f}V<br>' +
             '%{text}<br>' +
             '<b>Time:</b> %{x}<extra></extra>',
+            legendgroup=f'group_{category}',
             showlegend=True
         )
     )
 
-# Add traces for S_OVP
-for category in filtered_df[color_by].unique():
-    mask = filtered_df[color_by] == category
     fig.add_trace(
         go.Scatter(
-            x=filtered_df[mask]['timestamp'],
-            y=filtered_df[mask]['S_OVP'],
+            x=category_df['timestamp'],
+            y=category_df['S_OVP'],
             name=f'{category} (OVP)',
             mode='markers',
             marker=dict(size=8, symbol='diamond'),
-            text=filtered_df[mask]['hover_text'],
+            text=category_df['hover_text'],
             hovertemplate=
             '<b>OVP:</b> %{y:.3f}V<br>' +
             '%{text}<br>' +
             '<b>Time:</b> %{x}<extra></extra>',
-            showlegend=True
+            legendgroup=f'group_{category}',
+            showlegend=False  # Hide duplicate legend entries
         )
     )
 

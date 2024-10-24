@@ -12,6 +12,8 @@ def load_data(product):
     file_path = f"output-voltages/{product}-output.csv"
     df = pd.read_csv(file_path)
     df['timestamp'] = pd.to_datetime(df['timestamp'])  # Convert timestamp to datetime
+    df['machine_number'] = df['machine_number'].astype(str)
+    df['control_number'] = df['control_number'].astype(str)
     return df
 
 # --- Streamlit App ---
@@ -84,7 +86,7 @@ fig = px.scatter(
     color="control_number",
     hover_data=["machine_number", "test_step", "S_VSENSE", "S_OVP"],
     title=f"{y_axis_var} over Time for {product} by Control Number",
-    color_discrete_sequence=px.colors.qualitative.Plotly
+    color_discrete_sequence=px.colors.qualitative.Dark24
 )
 
 fig.update_traces(marker=dict(size=10))

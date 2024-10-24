@@ -10,7 +10,6 @@ def load_data(product):
     """Loads the CSV data for the given product."""
     # Replace 'data_folder' with the actual path to your data folder
     file_path = f"output-voltages/{product}-output.csv"
-    file_path = f"output-voltages/{product}-output.csv"
     df = pd.read_csv(file_path)
     df['timestamp'] = pd.to_datetime(df['timestamp'])  # Convert timestamp to datetime
     return df
